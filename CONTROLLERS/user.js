@@ -3,6 +3,18 @@ const User = require('../MODELS/user');
 
 const userController = {
     // all users
+    async getUserById({ params }, res) {
+        User.findOne({ _id: params.id })
+            .populate({ path: 'thoughts', select: 'v' })
+            .select('v')
+            .then((dbUserData) => {
+                return res.json(dbUserData);
+            })
+            .catch((err) => {
+                console.log(err);
+                return res.status(500).json(err);
+            });
+    },
     async getUsers(req, res) {
         try {
             const userData = await User.find().select('-__v');
@@ -12,6 +24,20 @@ const userController = {
             res.status(500).json(err);
         }
     },
+
+    async getAllUsers(req, res) {
+        try {
+            const userData = await User.find()
+                .populate({ path: 'thoughts', select: 'v' })
+                .populate({ path: 'friends', select: 'v' })
+                .select('__v')
+                .then((userData) => res.json(userData));
+        } catch (err) {
+            console.log(err);
+            res.status(500).json(err);
+        }
+    },
+
     // get one user
     async getOneUser(req, res) {
         try {
@@ -30,11 +56,13 @@ const userController = {
             res.status(500).json(err);
         }
     },
-    async creatUser(req, res) {
+    async createUser(req, res) {
         try {
             const userData = await User.create(req.body);
             res.json(userData);
-        } catch (error) {}
+        } catch (error) {
+            res.status(500).json(err);
+        }
     },
 
     // delete user and related thoughts/comments
